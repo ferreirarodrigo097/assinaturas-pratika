@@ -29,7 +29,7 @@ button{font:500 16px Rubik,Arial,sans-serif;min-height:44px;padding:0 20px;borde
 .pri{background:var(--or);color:#fff}.pri:hover{filter:brightness(1.07)}
 .sec{background:transparent;color:#fff;border-color:#6d7898}.sec:hover{border-color:#fff}
 .ghost{background:transparent;color:var(--ink);border-color:var(--line)}
-button:focus-visible,input:focus-visible,summary:focus-visible{outline:3px solid var(--or);outline-offset:2px}
+button:focus-visible,select:focus-visible,input:focus-visible,summary:focus-visible{outline:3px solid var(--or);outline-offset:2px}
 #status{font-size:15px;color:#ffd7a8;min-height:1.5em}
 .warn{margin-top:14px;background:rgba(239,125,1,.16);border:1px solid rgba(239,125,1,.5);color:#ffe1bf;padding:10px 14px;border-radius:8px;font-size:15px}
 .grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:24px}
@@ -37,7 +37,7 @@ button:focus-visible,input:focus-visible,summary:focus-visible{outline:3px solid
 .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:22px}
 h2{font-size:21px;margin:0 0 14px;font-weight:500}
 label{display:block;font-size:14px;color:var(--mute);margin:12px 0 4px}
-input{width:100%;font:16px Rubik,Arial,sans-serif;padding:11px 12px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink)}
+input,select{width:100%;font:16px Rubik,Arial,sans-serif;padding:11px 12px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink)}
 .hint{font-size:13px;color:var(--mute);margin:4px 0 0}
 details{margin-top:20px;border-top:1px solid var(--line);padding-top:14px}
 summary{cursor:pointer;font-weight:500;min-height:32px}
@@ -74,6 +74,13 @@ code{background:var(--bg);padding:1px 5px;border-radius:4px;overflow-wrap:anywhe
    <label for="tel">Telefone (como aparece na assinatura)</label><input id="tel" value="+55 11 4664.6175" autocomplete="off">
    <label for="wa">WhatsApp (só números, com 55 e DDD)</label><input id="wa" inputmode="numeric" placeholder="Em branco = usa o WhatsApp da empresa" autocomplete="off">
    <p class="hint">Deixe em branco para o botão abrir o WhatsApp da empresa.</p>
+   <label for="tam">Tamanho da assinatura</label>
+   <select id="tam">
+    <option value="0.67">Pequena (400px)</option>
+    <option value="0.75">Média (450px), recomendada</option>
+    <option value="0.84">Grande (500px)</option>
+    <option value="1">Original (600px)</option>
+   </select>
    <div class="actions"><button class="ghost" id="clear">Novo funcionário</button></div>
    <details id="links">
     <summary>Links da empresa</summary>
@@ -104,7 +111,7 @@ code{background:var(--bg);padding:1px 5px;border-radius:4px;overflow-wrap:anywhe
 <script>
 {
 const $=id=>document.getElementById(id);
-const F=['nome','cargo','tel','wa'],LK=['ig','li','waEmp','waMsg'];
+const F=['nome','cargo','tel','wa'],LK=['ig','li','waEmp','waMsg','tam'];
 const CFG=window.PRATIKA||{};
 const ONLINE=/^https?:$/.test(location.protocol);
 const BASEURL=(CFG.enderecoSite||'').replace(/\/+$/,'')||(ONLINE?location.href.replace(/[#?].*$/,'').replace(/\/[^\/]*$/,''):'.');
@@ -113,13 +120,19 @@ const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'
 const digits=s=>String(s).replace(/\D/g,'');
 const NAVY='#2a3757',GREY='#e8e7e5';
 const cv=document.createElement('canvas').getContext('2d');
-const PAD=16,GAP=63,LMIN=237,LOGO=255,RMIN=20,BASE=600;
+function dims(S){
+ const z=x=>Math.round(x*S),H=z(131),top=z(17),logoH=z(92);
+ return {S,H,top,grey:H-top,logoH,logoW:Math.round(logoH*510/184),bottom:H-logoH,
+  pad:z(16),gap:z(63),lmin:z(237),rmin:z(20),base:z(600),
+  nf:z(24),nl:z(27),tf:Math.round(17*S*2)/2,tl:z(22),tt:z(13),
+  ic:z(24),icg:z(4),ipt:z(9),ipl:z(5),gb:z(163)};
+}
 function tw(t,f){cv.font=f;return Math.ceil(cv.measureText(t).width)}
-function geom(nome,cargo,tel){
- const text=Math.max(tw(nome,'bold 24px Arial'),tw(nome,'800 24px Rubik'),tw(cargo,'17px Arial'),tw(cargo,'300 17px Rubik'),tw(tel,'17px Arial'),tw(tel,'300 17px Rubik'));
- const L=Math.max(LMIN,PAD+text+GAP);
- const total=Math.max(BASE,L+LOGO+RMIN);
- return {L,total,fill:total-L-LOGO};
+function geom(d,nome,cargo,tel){
+ const text=Math.max(tw(nome,'bold '+d.nf+'px Arial'),tw(nome,'800 '+d.nf+'px Rubik'),tw(cargo,d.tf+'px Arial'),tw(cargo,'300 '+d.tf+'px Rubik'),tw(tel,d.tf+'px Arial'),tw(tel,'300 '+d.tf+'px Rubik'));
+ const L=Math.max(d.lmin,d.pad+text+d.gap);
+ const total=Math.max(d.base,L+d.logoW+d.rmin);
+ return {L,total,fill:total-L-d.logoW};
 }
 function link(u){u=u.trim();if(!u)return '';return /^https?:\/\//i.test(u)?u:'https://'+u}
 function sig(){
@@ -128,28 +141,30 @@ function sig(){
  const waNum=digits(v('wa'))||digits(v('waEmp'))||digits(tel);
  const msg=v('waMsg');
  const waUrl='https://wa.me/'+waNum+(msg?'?text='+encodeURIComponent(msg):'');
- const src=IMG;
- const g=geom(nome,cargo,tel),R=g.total-g.L,TB='cellpadding="0" cellspacing="0" border="0"';
- const T='font-family:Rubik,Arial,Helvetica,sans-serif;color:'+NAVY+';white-space:nowrap;';
- const icon=(href,s,alt)=>{const img='<img src="'+esc(s)+'" width="24" height="24" alt="'+alt+'" style="display:block;border:0;width:24px;height:24px;">';
-   return '<td width="24" style="padding:0 4px 0 0;">'+(href?'<a href="'+esc(href)+'" target="_blank" style="text-decoration:none;">'+img+'</a>':img)+'</td>'};
+ const src=IMG,d=dims(parseFloat($('tam').value)||0.75);
+ const g=geom(d,nome,cargo,tel),R=g.total-g.L,TB='cellpadding="0" cellspacing="0" border="0"';
+ const FF='font-family:Rubik,Arial,Helvetica,sans-serif;';
+ const T=FF+'color:'+NAVY+';white-space:nowrap;';
+ const icon=(href,s,alt)=>{const img='<img src="'+esc(s)+'" width="'+d.ic+'" height="'+d.ic+'" alt="'+alt+'" style="display:block;border:0;width:'+d.ic+'px;height:'+d.ic+'px;">';
+   return '<td width="'+d.ic+'" style="padding:0 '+d.icg+'px 0 0;">'+(href?'<a href="'+esc(href)+'" target="_blank" style="text-decoration:none;">'+img+'</a>':img)+'</td>'};
+ const line=(txt,extra)=>'<div style="'+T+'font-size:'+d.tf+'px;line-height:'+d.tl+'px;font-weight:300;">'+txt+'</div>';
  return '<table '+TB+' width="'+g.total+'" style="border-collapse:collapse;width:'+g.total+'px;'+T+'">'+
  '<tr><td rowspan="2" width="'+g.L+'" valign="top" style="width:'+g.L+'px;padding:0;">'+
   '<table '+TB+' width="'+g.L+'" style="border-collapse:collapse;width:'+g.L+'px;">'+
-  '<tr><td height="17" style="height:17px;line-height:17px;font-size:1px;background:#ffffff;">&nbsp;</td></tr>'+
-  '<tr><td height="114" valign="top" bgcolor="'+GREY+'" style="height:114px;background:'+GREY+';padding:13px 0 0 '+PAD+'px;">'+
-   '<div style="'+T+'font-size:24px;line-height:27px;font-weight:800;">'+esc(nome)+'</div>'+
-   (cargo?'<div style="'+T+'font-size:17px;line-height:22px;font-weight:300;">'+esc(cargo)+'</div>':'')+
-   (tel?'<div style="'+T+'font-size:17px;line-height:22px;font-weight:300;"><a href="tel:+'+digits(tel)+'" style="font-family:Rubik,Arial,Helvetica,sans-serif;font-weight:300;color:'+NAVY+';text-decoration:none;">'+esc(tel)+'</a></div>':'')+
+  '<tr><td height="'+d.top+'" style="height:'+d.top+'px;line-height:'+d.top+'px;font-size:1px;background:#ffffff;">&nbsp;</td></tr>'+
+  '<tr><td height="'+d.grey+'" valign="top" bgcolor="'+GREY+'" style="height:'+d.grey+'px;background:'+GREY+';padding:'+d.tt+'px 0 0 '+d.pad+'px;">'+
+   '<div style="'+T+'font-size:'+d.nf+'px;line-height:'+d.nl+'px;font-weight:800;">'+esc(nome)+'</div>'+
+   (cargo?line(esc(cargo)):'')+
+   (tel?line('<a href="tel:+'+digits(tel)+'" style="'+FF+'font-weight:300;color:'+NAVY+';text-decoration:none;">'+esc(tel)+'</a>'):'')+
   '</td></tr></table></td>'+
   '<td width="'+R+'" style="width:'+R+'px;padding:0;"><table '+TB+' width="'+R+'" style="border-collapse:collapse;width:'+R+'px;"><tr>'+
-   '<td width="'+LOGO+'" style="width:'+LOGO+'px;padding:0;line-height:0;font-size:0;"><img src="'+esc(src.logo)+'" width="'+LOGO+'" height="92" alt="Pratika Contabilidade" style="display:block;border:0;width:'+LOGO+'px;height:92px;"></td>'+
-   '<td width="'+g.fill+'" height="92" bgcolor="'+NAVY+'" style="width:'+g.fill+'px;height:92px;background:'+NAVY+';font-size:1px;line-height:1px;">&nbsp;</td>'+
+   '<td width="'+d.logoW+'" style="width:'+d.logoW+'px;padding:0;line-height:0;font-size:0;"><img src="'+esc(src.logo)+'" width="'+d.logoW+'" height="'+d.logoH+'" alt="Pratika Contabilidade" style="display:block;border:0;width:'+d.logoW+'px;height:'+d.logoH+'px;"></td>'+
+   '<td width="'+g.fill+'" height="'+d.logoH+'" bgcolor="'+NAVY+'" style="width:'+g.fill+'px;height:'+d.logoH+'px;background:'+NAVY+';font-size:1px;line-height:1px;">&nbsp;</td>'+
   '</tr></table></td></tr>'+
  '<tr><td width="'+R+'" style="padding:0;"><table '+TB+' width="'+R+'" style="border-collapse:collapse;width:'+R+'px;"><tr>'+
-  '<td width="163" height="39" valign="top" bgcolor="'+GREY+'" style="width:163px;height:39px;background:'+GREY+';padding:9px 0 0 5px;">'+
+  '<td width="'+d.gb+'" height="'+d.bottom+'" valign="top" bgcolor="'+GREY+'" style="width:'+d.gb+'px;height:'+d.bottom+'px;background:'+GREY+';padding:'+d.ipt+'px 0 0 '+d.ipl+'px;">'+
    '<table '+TB+'><tr>'+icon(link(v('ig')),src.ig,'Instagram')+icon(link(v('li')),src.li,'LinkedIn')+icon(waNum?waUrl:'',src.wa,'WhatsApp')+'</tr></table>'+
-  '</td><td width="'+(R-163)+'" style="width:'+(R-163)+'px;background:#ffffff;font-size:1px;">&nbsp;</td></tr></table></td></tr></table>';
+  '</td><td width="'+(R-d.gb)+'" style="width:'+(R-d.gb)+'px;background:#ffffff;font-size:1px;">&nbsp;</td></tr></table></td></tr></table>';
 }
 function warnings(){
  const w=[];
@@ -176,12 +191,12 @@ $('copyCode').addEventListener('click',async()=>{
 });
 $('clear').addEventListener('click',()=>{F.forEach(k=>$(k).value='');render();$('nome').focus()});
 {let saved={};try{saved=JSON.parse(localStorage.getItem('pratika-links'))||{}}catch(e){}
- const def={ig:CFG.instagram,li:CFG.linkedin,waEmp:CFG.whatsappEmpresa,waMsg:CFG.mensagemWhatsapp};
+ const def={ig:CFG.instagram,li:CFG.linkedin,waEmp:CFG.whatsappEmpresa,waMsg:CFG.mensagemWhatsapp,tam:CFG.tamanho?String(CFG.tamanho):'0.75'};
  LK.forEach(k=>$(k).value=(saved[k]!=null&&saved[k]!=='')?saved[k]:(def[k]||''));
  if(!$('ig').value||!$('li').value)$('links').open=true;}
-[...F,...LK].forEach(k=>$(k).addEventListener('input',render));
+[...F,...LK].forEach(k=>{$(k).addEventListener('input',render);$(k).addEventListener('change',render)});
 render();
-try{Promise.all([document.fonts.load('800 24px Rubik'),document.fonts.load('300 17px Rubik')]).then(render,()=>{})}catch(e){}
+try{Promise.all([document.fonts.load('800 20px Rubik'),document.fonts.load('300 14px Rubik')]).then(render,()=>{})}catch(e){}
 }
 </script>
 </body>
