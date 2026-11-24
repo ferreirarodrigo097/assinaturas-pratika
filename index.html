@@ -81,7 +81,6 @@ code{background:var(--bg);padding:1px 5px;border-radius:4px;overflow-wrap:anywhe
     <option value="0.84">Grande (500px)</option>
     <option value="1">Original (600px)</option>
    </select>
-   <div class="actions"><button class="ghost" id="clear">Novo funcionário</button></div>
    <details id="links">
     <summary>Links da empresa</summary>
     <p class="hint">Valem para todas as assinaturas e ficam lembrados neste navegador.</p>
@@ -189,7 +188,6 @@ $('copyCode').addEventListener('click',async()=>{
  try{await navigator.clipboard.writeText(html);say('Código HTML copiado.')}
  catch(e){const t=document.createElement('textarea');t.value=html;document.body.appendChild(t);t.select();let ok=false;try{ok=document.execCommand('copy')}catch(_){}t.remove();say(ok?'Código HTML copiado.':'Não consegui copiar o código.')}
 });
-$('clear').addEventListener('click',()=>{F.forEach(k=>$(k).value='');render();$('nome').focus()});
 {let saved={};try{saved=JSON.parse(localStorage.getItem('pratika-links'))||{}}catch(e){}
  const def={ig:CFG.instagram,li:CFG.linkedin,waEmp:CFG.whatsappEmpresa,waMsg:CFG.mensagemWhatsapp,tam:CFG.tamanho?String(CFG.tamanho):'0.75'};
  LK.forEach(k=>$(k).value=(saved[k]!=null&&saved[k]!=='')?saved[k]:(def[k]||''));
