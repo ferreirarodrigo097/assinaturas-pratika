@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Assinaturas Pratika</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<script src="config.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;800&display=swap" rel="stylesheet">
+<style>
+/* VOICE: prático, de escritório, sem enfeite — ferramenta de uso diário da equipe
+   IDEA: a própria assinatura é a peça central, como uma prova de gráfica sobre a mesa
+   PICTURE: pré-visualização ao vivo da assinatura, grande, no topo
+   COLOUR and TYPE: azul-marinho Pratika #2a3757, laranja #ef7d01, cinza #e8e7e5; Rubik
+   LAYOUT: faixa marinho com a prévia; abaixo formulário + configurações e passo a passo */
+:root{color-scheme:light dark;--bg:light-dark(#f4f3f1,#14192a);--card:light-dark(#fff,#1d2438);--ink:light-dark(#1f2840,#e9ebf2);--mute:light-dark(#5d6680,#a3abc2);--line:light-dark(#dcdad6,#323b55);--navy:#2a3757;--or:#ef7d01;--grey:#e8e7e5}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 Rubik,Arial,sans-serif;overflow-x:clip}
+.band{padding:clamp(24px,4vw,56px) max(5vw,16px)}
+.top{background:var(--navy);color:#fff}
+.wrap{max-width:1100px;margin:0 auto}
+h1{font-size:clamp(28px,4vw,42px);line-height:1.05;margin:0 0 6px;font-weight:800;text-wrap:balance}
+.top p{margin:0 0 24px;color:#c9cfe0;max-width:62ch}
+.sheet{background:#fff;border-radius:10px;padding:clamp(14px,3vw,32px);box-shadow:0 18px 40px rgba(0,0,0,.28);overflow-x:auto}
+#preview{width:max-content;margin:0 auto}
+.actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px;align-items:center}
+button{font:500 16px Rubik,Arial,sans-serif;min-height:44px;padding:0 20px;border-radius:8px;border:2px solid transparent;cursor:pointer}
+.pri{background:var(--or);color:#fff}.pri:hover{filter:brightness(1.07)}
+.sec{background:transparent;color:#fff;border-color:#6d7898}.sec:hover{border-color:#fff}
+.ghost{background:transparent;color:var(--ink);border-color:var(--line)}
+button:focus-visible,input:focus-visible,summary:focus-visible{outline:3px solid var(--or);outline-offset:2px}
+#status{font-size:15px;color:#ffd7a8;min-height:1.5em}
+.warn{margin-top:14px;background:rgba(239,125,1,.16);border:1px solid rgba(239,125,1,.5);color:#ffe1bf;padding:10px 14px;border-radius:8px;font-size:15px}
+.grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:24px}
+@media(max-width:820px){.grid{grid-template-columns:minmax(0,1fr)}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:22px}
+h2{font-size:21px;margin:0 0 14px;font-weight:500}
+label{display:block;font-size:14px;color:var(--mute);margin:12px 0 4px}
+input{width:100%;font:16px Rubik,Arial,sans-serif;padding:11px 12px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink)}
+.hint{font-size:13px;color:var(--mute);margin:4px 0 0}
+details{margin-top:20px;border-top:1px solid var(--line);padding-top:14px}
+summary{cursor:pointer;font-weight:500;min-height:32px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.chip{display:inline-flex;align-items:center;border:1px solid var(--line);border-radius:99px;background:var(--bg)}
+.chip button{min-height:36px;padding:0 12px;font-size:15px;background:none;color:var(--ink);border:0}
+.chip .x{padding:0 10px 0 2px;color:var(--mute)}
+ol{padding-left:20px;margin:0}ol li{margin-bottom:10px}
+.small{font-size:14px;color:var(--mute)}
+code{background:var(--bg);padding:1px 5px;border-radius:4px;overflow-wrap:anywhere;font-size:14px}
+</style>
+</head>
+<body>
+<header class="band top">
+ <div class="wrap">
+  <h1>Assinaturas de e-mail Pratika</h1>
+  <p>Preencha os dados do funcionário, confira a prévia e clique em Copiar assinatura. Instagram, LinkedIn, WhatsApp e telefone ficam clicáveis para quem recebe.</p>
+  <div class="sheet"><div id="preview"></div></div>
+  <div class="actions">
+   <button class="pri" id="copySig">Copiar assinatura</button>
+   <button class="sec" id="copyCode">Copiar código HTML</button>
+   <span id="status" role="status"></span>
+  </div>
+  <div class="warn" id="warn" hidden></div>
+ </div>
+</header>
+
+<main class="band">
+ <div class="wrap grid">
+  <section class="card">
+   <h2>Funcionário</h2>
+   <label for="nome">Nome</label><input id="nome" value="Helen Ramos" autocomplete="off">
+   <label for="cargo">Cargo</label><input id="cargo" value="Contadora" autocomplete="off">
+   <label for="tel">Telefone (como aparece na assinatura)</label><input id="tel" value="+55 11 4664.6175" autocomplete="off">
+   <label for="wa">WhatsApp (só números, com 55 e DDD)</label><input id="wa" inputmode="numeric" placeholder="Em branco = usa o WhatsApp da empresa" autocomplete="off">
+   <p class="hint">Deixe em branco para o botão abrir o WhatsApp da empresa.</p>
+   <div class="actions"><button class="ghost" id="clear">Novo funcionário</button></div>
+   <details id="links">
+    <summary>Links da empresa</summary>
+    <p class="hint">Valem para todas as assinaturas e ficam lembrados neste navegador.</p>
+    <label for="ig">Instagram</label><input id="ig" placeholder="https://www.instagram.com/seuperfil" autocomplete="off">
+    <label for="li">LinkedIn</label><input id="li" placeholder="https://www.linkedin.com/company/suaempresa" autocomplete="off">
+    <label for="waEmp">WhatsApp da empresa (só números, com 55 e DDD)</label><input id="waEmp" inputmode="numeric" placeholder="551146646175" autocomplete="off">
+    <label for="waMsg">Mensagem pronta do WhatsApp (opcional)</label><input id="waMsg" autocomplete="off">
+   </details>
+  </section>
+
+  <section class="card">
+   <h2>Como instalar</h2>
+   <ol>
+        <li>Na primeira vez, confira os <strong>Links da empresa</strong> (Instagram, LinkedIn e WhatsApp).</li>
+    <li>Preencha os dados do funcionário e confira a prévia.</li>
+    <li>Clique em <strong>Copiar assinatura</strong>.</li>
+    <li><strong>Gmail:</strong> Configurações → Ver todas as configurações → Assinatura → Criar nova → cole (Ctrl+V).</li>
+    <li><strong>Outlook:</strong> Configurações → Email → Assinaturas (ou Arquivo → Opções → Email → Assinaturas no app) → cole.</li>
+    <li>Envie um e-mail de teste para o seu celular e toque em cada ícone.</li>
+   </ol>
+   <p class="small">Dica: se o programa de e-mail tiver um campo para código HTML (Thunderbird, Apple Mail, alguns sistemas), use <strong>Copiar código HTML</strong>.</p>
+   <p class="small">As imagens da assinatura ficam hospedadas neste mesmo site. Por isso a assinatura funciona para quem recebe sem nenhuma configuração extra.</p>
+  </section>
+ </div>
+</main>
+
+<script>
+{
+const $=id=>document.getElementById(id);
+const F=['nome','cargo','tel','wa'],LK=['ig','li','waEmp','waMsg'];
+const CFG=window.PRATIKA||{};
+const ONLINE=/^https?:$/.test(location.protocol);
+const BASEURL=(CFG.enderecoSite||'').replace(/\/+$/,'')||(ONLINE?location.href.replace(/[#?].*$/,'').replace(/\/[^\/]*$/,''):'.');
+const IMG={logo:BASEURL+'/img/pratika-logo-v2.png',ig:BASEURL+'/img/icone-instagram.png',li:BASEURL+'/img/icone-linkedin.png',wa:BASEURL+'/img/icone-whatsapp.png'};
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const digits=s=>String(s).replace(/\D/g,'');
+const NAVY='#2a3757',GREY='#e8e7e5';
+const cv=document.createElement('canvas').getContext('2d');
+const PAD=16,GAP=67,LMIN=237,LOGO=255,RMIN=20,BASE=600;
+function tw(t,f){cv.font=f;return Math.ceil(cv.measureText(t).width)}
+function geom(nome,cargo,tel){
+ const text=Math.max(tw(nome,'bold 24px Arial'),tw(cargo,'17px Arial'),tw(tel,'17px Arial'));
+ const L=Math.max(LMIN,PAD+text+GAP);
+ const total=Math.max(BASE,L+LOGO+RMIN);
+ return {L,total,fill:total-L-LOGO};
+}
+function link(u){u=u.trim();if(!u)return '';return /^https?:\/\//i.test(u)?u:'https://'+u}
+function sig(){
+ const v=k=>$(k).value.trim();
+ const nome=v('nome')||'Nome do funcionário',cargo=v('cargo'),tel=v('tel');
+ const waNum=digits(v('wa'))||digits(v('waEmp'))||digits(tel);
+ const msg=v('waMsg');
+ const waUrl='https://wa.me/'+waNum+(msg?'?text='+encodeURIComponent(msg):'');
+ const src=IMG;
+ const g=geom(nome,cargo,tel),R=g.total-g.L,TB='cellpadding="0" cellspacing="0" border="0"';
+ const T='font-family:Arial,Helvetica,sans-serif;color:'+NAVY+';white-space:nowrap;';
+ const icon=(href,s,alt)=>{const img='<img src="'+esc(s)+'" width="24" height="24" alt="'+alt+'" style="display:block;border:0;width:24px;height:24px;">';
+   return '<td width="24" style="padding:0 4px 0 0;">'+(href?'<a href="'+esc(href)+'" target="_blank" style="text-decoration:none;">'+img+'</a>':img)+'</td>'};
+ return '<table '+TB+' width="'+g.total+'" style="border-collapse:collapse;width:'+g.total+'px;'+T+'">'+
+ '<tr><td rowspan="2" width="'+g.L+'" valign="top" style="width:'+g.L+'px;padding:0;">'+
+  '<table '+TB+' width="'+g.L+'" style="border-collapse:collapse;width:'+g.L+'px;">'+
+  '<tr><td height="17" style="height:17px;line-height:17px;font-size:1px;background:#ffffff;">&nbsp;</td></tr>'+
+  '<tr><td height="114" valign="top" bgcolor="'+GREY+'" style="height:114px;background:'+GREY+';padding:13px 0 0 '+PAD+'px;">'+
+   '<div style="'+T+'font-size:24px;line-height:27px;font-weight:bold;">'+esc(nome)+'</div>'+
+   (cargo?'<div style="'+T+'font-size:17px;line-height:22px;">'+esc(cargo)+'</div>':'')+
+   (tel?'<div style="'+T+'font-size:17px;line-height:22px;"><a href="tel:+'+digits(tel)+'" style="color:'+NAVY+';text-decoration:none;">'+esc(tel)+'</a></div>':'')+
+  '</td></tr></table></td>'+
+  '<td width="'+R+'" style="width:'+R+'px;padding:0;"><table '+TB+' width="'+R+'" style="border-collapse:collapse;width:'+R+'px;"><tr>'+
+   '<td width="'+LOGO+'" style="width:'+LOGO+'px;padding:0;line-height:0;font-size:0;"><img src="'+esc(src.logo)+'" width="'+LOGO+'" height="92" alt="Pratika Contabilidade" style="display:block;border:0;width:'+LOGO+'px;height:92px;"></td>'+
+   '<td width="'+g.fill+'" height="92" bgcolor="'+NAVY+'" style="width:'+g.fill+'px;height:92px;background:'+NAVY+';font-size:1px;line-height:1px;">&nbsp;</td>'+
+  '</tr></table></td></tr>'+
+ '<tr><td width="'+R+'" style="padding:0;"><table '+TB+' width="'+R+'" style="border-collapse:collapse;width:'+R+'px;"><tr>'+
+  '<td width="163" height="39" valign="top" bgcolor="'+GREY+'" style="width:163px;height:39px;background:'+GREY+';padding:9px 0 0 5px;">'+
+   '<table '+TB+'><tr>'+icon(link(v('ig')),src.ig,'Instagram')+icon(link(v('li')),src.li,'LinkedIn')+icon(waNum?waUrl:'',src.wa,'WhatsApp')+'</tr></table>'+
+  '</td><td width="'+(R-163)+'" style="width:'+(R-163)+'px;background:#ffffff;font-size:1px;">&nbsp;</td></tr></table></td></tr></table>';
+}
+function warnings(){
+ const w=[];
+ if(!$('ig').value.trim())w.push('link do Instagram');
+ if(!$('li').value.trim())w.push('link do LinkedIn');
+ if(!ONLINE&&!CFG.enderecoSite)w.push('o site ainda não está publicado (as imagens só aparecem para quem recebe depois de publicar)');
+ const el=$('warn');el.hidden=!w.length;
+ el.textContent=w.length?'Falta preencher em Links da empresa: '+w.join('; ')+'.':'';
+}
+function render(){$('preview').innerHTML=sig();warnings();try{localStorage.setItem('pratika-links',JSON.stringify(Object.fromEntries(LK.map(k=>[k,$(k).value]))))}catch(e){}}
+function say(t){$('status').textContent=t;clearTimeout(say.t);say.t=setTimeout(()=>$('status').textContent='',4000)}
+function selectCopy(node){const r=document.createRange();r.selectNodeContents(node);const s=getSelection();s.removeAllRanges();s.addRange(r);let ok=false;try{ok=document.execCommand('copy')}catch(e){}s.removeAllRanges();return ok}
+$('copySig').addEventListener('click',async()=>{
+ const html=sig();
+ try{await navigator.clipboard.write([new ClipboardItem({'text/html':new Blob([html],{type:'text/html'}),'text/plain':new Blob([$('nome').value],{type:'text/plain'})})]);say('Assinatura copiada. Agora cole no Gmail ou no Outlook.')}
+ catch(e){say(selectCopy($('preview'))?'Assinatura copiada. Agora cole no Gmail ou no Outlook.':'Não consegui copiar. Selecione a prévia com o mouse e use Ctrl+C.')}
+});
+$('copyCode').addEventListener('click',async()=>{
+ const html=sig();
+ try{await navigator.clipboard.writeText(html);say('Código HTML copiado.')}
+ catch(e){const t=document.createElement('textarea');t.value=html;document.body.appendChild(t);t.select();let ok=false;try{ok=document.execCommand('copy')}catch(_){}t.remove();say(ok?'Código HTML copiado.':'Não consegui copiar o código.')}
+});
+$('clear').addEventListener('click',()=>{F.forEach(k=>$(k).value='');render();$('nome').focus()});
+{let saved={};try{saved=JSON.parse(localStorage.getItem('pratika-links'))||{}}catch(e){}
+ const def={ig:CFG.instagram,li:CFG.linkedin,waEmp:CFG.whatsappEmpresa,waMsg:CFG.mensagemWhatsapp};
+ LK.forEach(k=>$(k).value=(saved[k]!=null&&saved[k]!=='')?saved[k]:(def[k]||''));
+ if(!$('ig').value||!$('li').value)$('links').open=true;}
+[...F,...LK].forEach(k=>$(k).addEventListener('input',render));
+render();
+}
+</script>
+</body>
+</html>
