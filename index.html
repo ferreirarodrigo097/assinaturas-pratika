@@ -69,8 +69,8 @@ code{background:var(--bg);padding:1px 5px;border-radius:4px;overflow-wrap:anywhe
  <div class="wrap grid">
   <section class="card">
    <h2>Funcionário</h2>
-   <label for="nome">Nome</label><input id="nome" value="Helen Ramos" autocomplete="off">
-   <label for="cargo">Cargo</label><input id="cargo" value="Contadora" autocomplete="off">
+   <label for="nome">Nome</label><input id="nome" value="Nome Sobrenome" autocomplete="off">
+   <label for="cargo">Cargo</label><input id="cargo" value="Contador" autocomplete="off">
    <label for="tel">Telefone (como aparece na assinatura)</label><input id="tel" value="+55 11 4664.6175" autocomplete="off">
    <label for="wa">WhatsApp (só números, com 55 e DDD)</label><input id="wa" inputmode="numeric" placeholder="Em branco = usa o WhatsApp da empresa" autocomplete="off">
    <p class="hint">Deixe em branco para o botão abrir o WhatsApp da empresa.</p>
@@ -113,10 +113,10 @@ const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'
 const digits=s=>String(s).replace(/\D/g,'');
 const NAVY='#2a3757',GREY='#e8e7e5';
 const cv=document.createElement('canvas').getContext('2d');
-const PAD=16,GAP=67,LMIN=237,LOGO=255,RMIN=20,BASE=600;
+const PAD=16,GAP=63,LMIN=237,LOGO=255,RMIN=20,BASE=600;
 function tw(t,f){cv.font=f;return Math.ceil(cv.measureText(t).width)}
 function geom(nome,cargo,tel){
- const text=Math.max(tw(nome,'bold 24px Arial'),tw(cargo,'17px Arial'),tw(tel,'17px Arial'));
+ const text=Math.max(tw(nome,'bold 24px Arial'),tw(nome,'800 24px Rubik'),tw(cargo,'17px Arial'),tw(cargo,'300 17px Rubik'),tw(tel,'17px Arial'),tw(tel,'300 17px Rubik'));
  const L=Math.max(LMIN,PAD+text+GAP);
  const total=Math.max(BASE,L+LOGO+RMIN);
  return {L,total,fill:total-L-LOGO};
@@ -124,13 +124,13 @@ function geom(nome,cargo,tel){
 function link(u){u=u.trim();if(!u)return '';return /^https?:\/\//i.test(u)?u:'https://'+u}
 function sig(){
  const v=k=>$(k).value.trim();
- const nome=v('nome')||'Nome do funcionário',cargo=v('cargo'),tel=v('tel');
+ const nome=v('nome')||'Nome Sobrenome',cargo=v('cargo'),tel=v('tel');
  const waNum=digits(v('wa'))||digits(v('waEmp'))||digits(tel);
  const msg=v('waMsg');
  const waUrl='https://wa.me/'+waNum+(msg?'?text='+encodeURIComponent(msg):'');
  const src=IMG;
  const g=geom(nome,cargo,tel),R=g.total-g.L,TB='cellpadding="0" cellspacing="0" border="0"';
- const T='font-family:Arial,Helvetica,sans-serif;color:'+NAVY+';white-space:nowrap;';
+ const T='font-family:Rubik,Arial,Helvetica,sans-serif;color:'+NAVY+';white-space:nowrap;';
  const icon=(href,s,alt)=>{const img='<img src="'+esc(s)+'" width="24" height="24" alt="'+alt+'" style="display:block;border:0;width:24px;height:24px;">';
    return '<td width="24" style="padding:0 4px 0 0;">'+(href?'<a href="'+esc(href)+'" target="_blank" style="text-decoration:none;">'+img+'</a>':img)+'</td>'};
  return '<table '+TB+' width="'+g.total+'" style="border-collapse:collapse;width:'+g.total+'px;'+T+'">'+
@@ -138,9 +138,9 @@ function sig(){
   '<table '+TB+' width="'+g.L+'" style="border-collapse:collapse;width:'+g.L+'px;">'+
   '<tr><td height="17" style="height:17px;line-height:17px;font-size:1px;background:#ffffff;">&nbsp;</td></tr>'+
   '<tr><td height="114" valign="top" bgcolor="'+GREY+'" style="height:114px;background:'+GREY+';padding:13px 0 0 '+PAD+'px;">'+
-   '<div style="'+T+'font-size:24px;line-height:27px;font-weight:bold;">'+esc(nome)+'</div>'+
-   (cargo?'<div style="'+T+'font-size:17px;line-height:22px;">'+esc(cargo)+'</div>':'')+
-   (tel?'<div style="'+T+'font-size:17px;line-height:22px;"><a href="tel:+'+digits(tel)+'" style="color:'+NAVY+';text-decoration:none;">'+esc(tel)+'</a></div>':'')+
+   '<div style="'+T+'font-size:24px;line-height:27px;font-weight:800;">'+esc(nome)+'</div>'+
+   (cargo?'<div style="'+T+'font-size:17px;line-height:22px;font-weight:300;">'+esc(cargo)+'</div>':'')+
+   (tel?'<div style="'+T+'font-size:17px;line-height:22px;font-weight:300;"><a href="tel:+'+digits(tel)+'" style="font-family:Rubik,Arial,Helvetica,sans-serif;font-weight:300;color:'+NAVY+';text-decoration:none;">'+esc(tel)+'</a></div>':'')+
   '</td></tr></table></td>'+
   '<td width="'+R+'" style="width:'+R+'px;padding:0;"><table '+TB+' width="'+R+'" style="border-collapse:collapse;width:'+R+'px;"><tr>'+
    '<td width="'+LOGO+'" style="width:'+LOGO+'px;padding:0;line-height:0;font-size:0;"><img src="'+esc(src.logo)+'" width="'+LOGO+'" height="92" alt="Pratika Contabilidade" style="display:block;border:0;width:'+LOGO+'px;height:92px;"></td>'+
@@ -168,7 +168,9 @@ $('copySig').addEventListener('click',async()=>{
  catch(e){say(selectCopy($('preview'))?'Assinatura copiada. Agora cole no Gmail ou no Outlook.':'Não consegui copiar. Selecione a prévia com o mouse e use Ctrl+C.')}
 });
 $('copyCode').addEventListener('click',async()=>{
- const html=sig();
+ let html=sig();
+ const FONT='<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;800&display=swap" rel="stylesheet">\n';
+ html=FONT+html;
  try{await navigator.clipboard.writeText(html);say('Código HTML copiado.')}
  catch(e){const t=document.createElement('textarea');t.value=html;document.body.appendChild(t);t.select();let ok=false;try{ok=document.execCommand('copy')}catch(_){}t.remove();say(ok?'Código HTML copiado.':'Não consegui copiar o código.')}
 });
@@ -179,6 +181,7 @@ $('clear').addEventListener('click',()=>{F.forEach(k=>$(k).value='');render();$(
  if(!$('ig').value||!$('li').value)$('links').open=true;}
 [...F,...LK].forEach(k=>$(k).addEventListener('input',render));
 render();
+try{Promise.all([document.fonts.load('800 24px Rubik'),document.fonts.load('300 17px Rubik')]).then(render,()=>{})}catch(e){}
 }
 </script>
 </body>
